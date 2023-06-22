@@ -8,7 +8,7 @@ from xgboost import XGBRegressor
 import numpy as np
 
 scoring = 'neg_mean_squared_error'
-cv = KFold(n_splits=10)
+cv = KFold(n_splits=5)
 
 def gbr(trial, X, y, scoring=scoring, cv=cv):
     n_estimators = trial.suggest_int('n_estimators', 50, 1000)

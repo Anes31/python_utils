@@ -13,7 +13,7 @@ from catboost import CatBoostClassifier
 import numpy as np
 
 scoring = 'accuracy'
-cv = KFold(n_splits=10)
+cv = KFold(n_splits=5)
 
 def lightgbm_multi(trial, X, y, scoring=scoring, cv=cv):
     params = {
