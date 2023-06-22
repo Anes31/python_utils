@@ -1,4 +1,21 @@
-def lightgbm_binary(trial, scoring, cv):
+from sklearn.model_selection import cross_val_score, KFold
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier, AdaBoostClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import RidgeClassifier, LogisticRegression
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.naive_bayes import GaussianNB
+
+from lightgbm import LGBMClassifier
+from xgboost import XGBClassifier
+from catboost import CatBoostClassifier
+
+import numpy as np
+
+scoring = 'accuracy'
+cv = KFold(n_splits=10)
+
+def lightgbm_multi(trial, X, y, scoring=scoring, cv=cv):
     params = {
         'objective': 'multiclass',
         'boosting_type': 'gbdt',
@@ -23,7 +40,7 @@ def lightgbm_binary(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def lightgbm_binary(trial, scoring, cv):
+def lightgbm_binary(trial, X, y, scoring=scoring, cv=cv):
     params = {
         'objective': 'binary',
         'boosting_type': 'gbdt',
@@ -48,7 +65,7 @@ def lightgbm_binary(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def xgb(trial, scoring, cv):
+def xgb(trial, X, y, scoring=scoring, cv=cv):
     params = {
         'n_estimators': trial.suggest_int('n_estimators', 50, 1000),
         'max_depth': trial.suggest_int('max_depth', 3, 10),
@@ -72,7 +89,7 @@ def xgb(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def catboost(trial, scoring, cv):
+def catboost(trial, X, y, scoring=scoring, cv=cv):
     params = {
         'iterations': trial.suggest_int('iterations', 100, 1000),
         'depth': trial.suggest_int('depth', 1, 10),
@@ -81,7 +98,7 @@ def catboost(trial, scoring, cv):
         'random_seed': 0,
         'loss_function': 'MultiClass',
         'eval_metric': 'MultiClass',
-        'verbose': False
+        'logging_level': 'Silent'
     }
     
     model = CatBoostClassifier(**params)
@@ -92,7 +109,7 @@ def catboost(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def rf(trial, scoring, cv):
+def rf(trial, X, y, scoring=scoring, cv=cv):
     max_depth = trial.suggest_int('max_depth', 1, 100)
     n_estimators = trial.suggest_int('n_estimators', 10, 500)
     min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 100)
@@ -113,7 +130,7 @@ def rf(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def gbc(trial, scoring, cv):
+def gbc(trial, X, y, scoring=scoring, cv=cv):
     #tol = trial.suggest_loguniform('tol', 1e-8, 10.0)
     max_depth = trial.suggest_int('max_depth', 1, 50)
     learning_rate = trial.suggest_loguniform('learning_rate', .001, 1)
@@ -138,7 +155,7 @@ def gbc(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def et(trial, scoring, cv):
+def et(trial, X, y, scoring=scoring, cv=cv):
     max_depth = trial.suggest_int('max_depth', 1, 100)
     n_estimators = trial.suggest_int('n_estimators', 10, 500)
     min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 100)
@@ -162,7 +179,7 @@ def et(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def lr(trial, scoring, cv):
+def lr(trial, X, y, scoring=scoring, cv=cv):
     C = trial.suggest_loguniform('C', 0.001, 1000)
     solver = trial.suggest_categorical('solver', ['newton-cg', 'liblinear', 'sag', 'saga'])
     
@@ -193,7 +210,7 @@ def lr(trial, scoring, cv):
     
     return np.mean(cv_scores)
     
-def ridge(trial, scoring, cv):
+def ridge(trial, X, y, scoring=scoring, cv=cv):
     alpha = trial.suggest_int('alpha', 0, 1000)
     tol = trial.suggest_loguniform('tol', 1e-8, 10.0)
         
@@ -209,7 +226,7 @@ def ridge(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def lda(trial, scoring, cv):
+def lda(trial, X, y, scoring=scoring, cv=cv):
     solver = trial.suggest_categorical('solver', ['lsqr', 'eigen'])
     tol = trial.suggest_loguniform('tol', 1e-8, 10.0)
           
@@ -224,7 +241,7 @@ def lda(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def nb(trial, scoring, cv):
+def nb(trial, X, y, scoring=scoring, cv=cv):
     var_smoothing  = trial.suggest_loguniform('var_smoothing', 1e-10, 1e-3)
           
     model = GaussianNB(
@@ -237,7 +254,7 @@ def nb(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def ada(trial, scoring, cv):
+def ada(trial, X, y, scoring=scoring, cv=cv):
     learning_rate = trial.suggest_loguniform('learning_rate', .001, 1)
     n_estimators = trial.suggest_int('n_estimators', 10, 500)
           
@@ -252,7 +269,7 @@ def ada(trial, scoring, cv):
     
     return np.mean(cv_scores)
 
-def knn(trial, scoring, cv):
+def knn(trial, X, y, scoring=scoring, cv=cv):
     n_neighbors = trial.suggest_int('n_neighbors', 2, 100)
           
     model = KNeighborsClassifier(

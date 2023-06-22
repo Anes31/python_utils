@@ -1,4 +1,16 @@
-def gbr(trial, scoring, cv):
+from sklearn.model_selection import cross_val_score, KFold
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.linear_model import Ridge, LinearRegression, OrthogonalMatchingPursuit, BayesianRidge
+
+from lightgbm import LGBMRegressor
+from xgboost import XGBRegressor
+
+import numpy as np
+
+scoring = 'neg_mean_squared_error'
+cv = KFold(n_splits=10)
+
+def gbr(trial, X, y, scoring=scoring, cv=cv):
     n_estimators = trial.suggest_int('n_estimators', 50, 1000)
     learning_rate = trial.suggest_uniform('learning_rate', 0.001, 0.1)
     max_depth = trial.suggest_int('max_depth', 2, 10)
@@ -18,11 +30,11 @@ def gbr(trial, scoring, cv):
     elif scoring=='neg_mean_absolute_error':
         cv_scores = (-cross_val_score(model, X, y, scoring='neg_mean_absolute_error', cv=cv))
     else:
-        cv_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv)
+        cv_scores = cross_val_score(model, X, y, scoring=X, y, scoring=scoring, cv=cv=cv)
         
     return np.mean(cv_scores)
 
-def lgbm(trial, scoring, cv):
+def lgbm(trial, X, y, scoring=scoring, cv=cv):
     params = {
         'objective': 'regression',
         'metric': 'mse',
@@ -52,11 +64,11 @@ def lgbm(trial, scoring, cv):
     elif scoring=='neg_mean_absolute_error':
         cv_scores = (-cross_val_score(model, X, y, scoring='neg_mean_absolute_error', cv=cv))
     else:
-        cv_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv)
+        cv_scores = cross_val_score(model, X, y, scoring=X, y, scoring=scoring, cv=cv=cv)
         
     return np.mean(cv_scores)
 
-def xgb(trial, scoring, cv):
+def xgb(trial, X, y, scoring=scoring, cv=cv):
     n_estimators = trial.suggest_int('n_estimators', 50, 1000)
     learning_rate = trial.suggest_uniform('learning_rate', 0.001, 0.1)
     max_depth = trial.suggest_int('max_depth', 2, 10)
@@ -76,11 +88,11 @@ def xgb(trial, scoring, cv):
     elif scoring=='neg_mean_absolute_error':
         cv_scores = (-cross_val_score(model, X, y, scoring='neg_mean_absolute_error', cv=cv))
     else:
-        cv_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv)
+        cv_scores = cross_val_score(model, X, y, scoring=X, y, scoring=scoring, cv=cv=cv)
         
     return np.mean(cv_scores)
 
-def rfr(trial, scoring, cv):
+def rfr(trial, X, y, scoring=scoring, cv=cv):
     n_estimators = trial.suggest_int('n_estimators', 50, 1000, step=100)
     max_depth = trial.suggest_int('max_depth', 2, 30, step=2)
     min_samples_split = trial.suggest_int('min_samples_split', 2, 10)
@@ -98,11 +110,11 @@ def rfr(trial, scoring, cv):
     elif scoring=='neg_mean_absolute_error':
         cv_scores = (-cross_val_score(model, X, y, scoring='neg_mean_absolute_error', cv=cv))
     else:
-        cv_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv)
+        cv_scores = cross_val_score(model, X, y, scoring=X, y, scoring=scoring, cv=cv=cv)
         
     return np.mean(cv_scores)
 
-def lr(trial, scoring, cv):
+def lr(trial, X, y, scoring=scoring, cv=cv):
     fit_intercept = trial.suggest_categorical('fit_intercept', [True, False])
     
     model = LinearRegression(fit_intercept=fit_intercept)
@@ -114,11 +126,11 @@ def lr(trial, scoring, cv):
     elif scoring=='neg_mean_absolute_error':
         cv_scores = (-cross_val_score(model, X, y, scoring='neg_mean_absolute_error', cv=cv))
     else:
-        cv_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv)
+        cv_scores = cross_val_score(model, X, y, scoring=X, y, scoring=scoring, cv=cv=cv)
         
     return np.mean(cv_scores)
 
-def ridge(trial, scoring, cv):
+def ridge(trial, X, y, scoring=scoring, cv=cv):
     alpha = trial.suggest_int('alpha', 0, 1000)
     tol = trial.suggest_loguniform('tol', 1e-8, 10.0)
         
@@ -134,11 +146,11 @@ def ridge(trial, scoring, cv):
     elif scoring=='neg_mean_absolute_error':
         cv_scores = (-cross_val_score(model, X, y, scoring='neg_mean_absolute_error', cv=cv))
     else:
-        cv_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv)
+        cv_scores = cross_val_score(model, X, y, scoring=X, y, scoring=scoring, cv=cv=cv)
         
     return np.mean(cv_scores)
 
-def br(trial, scoring, cv):
+def br(trial, X, y, scoring=scoring, cv=cv):
     n_iter = trial.suggest_int('n_iter', 50, 600)
     tol = trial.suggest_loguniform('tol', 1e-8, 10.0)
     alpha_1 = trial.suggest_loguniform('alpha_1', 1e-8, 10.0)
@@ -162,11 +174,11 @@ def br(trial, scoring, cv):
     elif scoring=='neg_mean_absolute_error':
         cv_scores = (-cross_val_score(model, X, y, scoring='neg_mean_absolute_error', cv=cv))
     else:
-        cv_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv)
+        cv_scores = cross_val_score(model, X, y, scoring=X, y, scoring=scoring, cv=cv=cv)
         
     return np.mean(cv_scores)
 
-def omp(trial, scoring, cv):
+def omp(trial, X, y, scoring=scoring, cv=cv):
     tol = trial.suggest_loguniform('tol', 1e-8, 10.0)
     
     model = OrthogonalMatchingPursuit(
@@ -180,6 +192,6 @@ def omp(trial, scoring, cv):
     elif scoring=='neg_mean_absolute_error':
         cv_scores = (-cross_val_score(model, X, y, scoring='neg_mean_absolute_error', cv=cv))
     else:
-        cv_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv)
+        cv_scores = cross_val_score(model, X, y, scoring=X, y, scoring=scoring, cv=cv=cv)
         
     return np.mean(cv_scores)
