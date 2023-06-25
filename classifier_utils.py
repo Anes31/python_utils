@@ -13,7 +13,7 @@ from catboost import CatBoostClassifier
 import numpy as np
 
 scoring = 'accuracy'
-cv = KFold(n_splits=5)
+cv = KFold(n_splits=5, shuffle=True, random_state=0)
 
 def lightgbm_multi(trial, X, y, scoring=scoring, cv=cv):
     params = {
@@ -29,6 +29,7 @@ def lightgbm_multi(trial, X, y, scoring=scoring, cv=cv):
         'colsample_bytree': trial.suggest_uniform('colsample_bytree', 0.1, 1),
         'reg_alpha': trial.suggest_loguniform('reg_alpha', 1e-9, 10.0),
         'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-9, 10.0),
+        'verbose': -1,
         'random_state': 0
     }
 
@@ -54,6 +55,7 @@ def lightgbm_binary(trial, X, y, scoring=scoring, cv=cv):
         'colsample_bytree': trial.suggest_uniform('colsample_bytree', 0.1, 1),
         'reg_alpha': trial.suggest_loguniform('reg_alpha', 1e-9, 10.0),
         'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-9, 10.0),
+        'verbose': -1,
         'random_state': 0
     }
 
@@ -76,7 +78,9 @@ def xgb(trial, X, y, scoring=scoring, cv=cv):
         'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-10, 1),
         'gamma': trial.suggest_loguniform('gamma', 1e-10, 1),
         'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
-        'eval_metric': 'mlogloss',
+        'objective': 'binary:logistic', #'mlogloss', 
+        'eval_metric': 'logloss',
+        'verbosity': 0,
         'random_state': 0,
         'n_jobs': -1
     }
@@ -96,8 +100,8 @@ def catboost(trial, X, y, scoring=scoring, cv=cv):
         'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.1),
         'l2_leaf_reg': trial.suggest_float('l2_leaf_reg', 0.1, 10.0),
         'random_seed': 0,
-        'loss_function': 'MultiClass',
-        'eval_metric': 'MultiClass',
+        #'loss_function': 'MultiClass',
+        #'eval_metric': 'MultiClass',
         'logging_level': 'Silent'
     }
     
@@ -276,7 +280,7 @@ def knn(trial, X, y, scoring=scoring, cv=cv):
         n_neighbors=n_neighbors
     )
     
-    model.fit(X, target)
+    model.fit(X, y)
     
     cv_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv)
     
