@@ -195,3 +195,22 @@ def omp(trial, X, y, scoring=scoring, cv=cv):
         cv_scores = cross_val_score(model, X, y, scoring=X, y, scoring=scoring, cv=cv=cv)
         
     return np.mean(cv_scores)
+
+
+def adaboost(trial, X, y, scoring=scoring, cv=cv):
+    kf = KFold(n_splits=10)
+    n_estimators = trial.suggest_int('n_estimators', 10, 1000)
+    learning_rate = trial.suggest_uniform('learning_rate', 0.001, 1.0)
+    
+    model = AdaBoostRegressor(n_estimators=n_estimators, learning_rate=learning_rate)
+    
+    model.fit(X, y)
+    
+    if scoring=='neg_mean_squared_error':
+        np.exp(np.sqrt(-cross_val_score(model, X, y, scoring='neg_mean_squared_error', cv=cv)))
+    elif scoring=='neg_mean_absolute_error':
+        cv_scores = (-cross_val_score(model, X, y, scoring='neg_mean_absolute_error', cv=cv))
+    else:
+        cv_scores = cross_val_score(model, X, y, scoring=X, y, scoring=scoring, cv=cv=cv)
+        
+    return np.mean(cv_scores)
