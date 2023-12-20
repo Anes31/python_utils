@@ -1,4 +1,4 @@
-from sklearn.model_selection import cross_val_score, KFold
+from sklearn.model_selection import cross_val_score, KFold, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier, AdaBoostClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import RidgeClassifier, LogisticRegression
@@ -13,9 +13,10 @@ from catboost import CatBoostClassifier
 import numpy as np
 
 scoring = 'accuracy'
-cv = KFold(n_splits=5, shuffle=True, random_state=0)
+# cv = KFold(n_splits=5, shuffle=True, random_state=0)
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
 
-def lightgbm_multi(trial, X, y, scoring=scoring, cv=cv):
+def lightgbm_multi(trial, scoring):
     params = {
         'objective': 'multiclass',
         'boosting_type': 'gbdt',
@@ -23,12 +24,12 @@ def lightgbm_multi(trial, X, y, scoring=scoring, cv=cv):
         'n_estimators': trial.suggest_int('n_estimators', 10, 500),
         'max_depth': trial.suggest_int('max_depth', 1, 50),
         'num_leaves': trial.suggest_int('num_leaves', 2, 100),
-        'learning_rate': trial.suggest_loguniform('learning_rate', 0.001, 0.1),
+        'learning_rate': trial.suggest_float('learning_rate', 0.001, 0.1, log=True),
         'min_child_samples': trial.suggest_int('min_child_samples', 1, 100),
-        'subsample': trial.suggest_uniform('subsample', 0.1, 1),
-        'colsample_bytree': trial.suggest_uniform('colsample_bytree', 0.1, 1),
-        'reg_alpha': trial.suggest_loguniform('reg_alpha', 1e-9, 10.0),
-        'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-9, 10.0),
+        'subsample': trial.suggest_float('subsample', 0.1, 1),
+        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.1, 1),
+        'reg_alpha': trial.suggest_float('reg_alpha', 1e-9, 10.0, log=True),
+        'reg_lambda': trial.suggest_float('reg_lambda', 1e-9, 10.0, log=True),
         'verbose': -1,
         'random_state': 0
     }
@@ -41,7 +42,7 @@ def lightgbm_multi(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def lightgbm_binary(trial, X, y, scoring=scoring, cv=cv):
+def lightgbm_binary(trial, scoring=scoring):
     params = {
         'objective': 'binary',
         'boosting_type': 'gbdt',
@@ -49,12 +50,12 @@ def lightgbm_binary(trial, X, y, scoring=scoring, cv=cv):
         'n_estimators': trial.suggest_int('n_estimators', 10, 500),
         'max_depth': trial.suggest_int('max_depth', 1, 50),
         'num_leaves': trial.suggest_int('num_leaves', 2, 100),
-        'learning_rate': trial.suggest_loguniform('learning_rate', 0.001, 0.1),
+        'learning_rate': trial.suggest_float('learning_rate', 0.001, 0.1, log=True),
         'min_child_samples': trial.suggest_int('min_child_samples', 1, 100),
-        'subsample': trial.suggest_uniform('subsample', 0.1, 1),
-        'colsample_bytree': trial.suggest_uniform('colsample_bytree', 0.1, 1),
-        'reg_alpha': trial.suggest_loguniform('reg_alpha', 1e-9, 10.0),
-        'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-9, 10.0),
+        'subsample': trial.suggest_float('subsample', 0.1, 1),
+        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.1, 1),
+        'reg_alpha': trial.suggest_float('reg_alpha', 1e-9, 10.0, log=True),
+        'reg_lambda': trial.suggest_float('reg_lambda', 1e-9, 10.0, log=True),
         'verbose': -1,
         'random_state': 0
     }
@@ -67,16 +68,16 @@ def lightgbm_binary(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def xgb(trial, X, y, scoring=scoring, cv=cv):
+def xgb(trial, scoring=scoring):
     params = {
         'n_estimators': trial.suggest_int('n_estimators', 50, 1000),
         'max_depth': trial.suggest_int('max_depth', 3, 10),
-        'learning_rate': trial.suggest_loguniform('learning_rate', 0.001, 0.1),
-        'subsample': trial.suggest_uniform('subsample', 0.1, 1),
-        'colsample_bytree': trial.suggest_uniform('colsample_bytree', 0.1, 1),
-        'reg_alpha': trial.suggest_loguniform('reg_alpha', 1e-10, 1),
-        'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-10, 1),
-        'gamma': trial.suggest_loguniform('gamma', 1e-10, 1),
+        'learning_rate': trial.suggest_float('learning_rate', 0.001, 0.1, log=True),
+        'subsample': trial.suggest_float('subsample', 0.1, 1),
+        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.1, 1),
+        'reg_alpha': trial.suggest_float('reg_alpha', 1e-10, 1, log=True),
+        'reg_lambda': trial.suggest_float('reg_lambda', 1e-10, 1, log=True),
+        'gamma': trial.suggest_float('gamma', 1e-10, 1, log=True),
         'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
         'objective': 'binary:logistic', #'mlogloss', 
         'eval_metric': 'logloss',
@@ -93,7 +94,7 @@ def xgb(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def catboost(trial, X, y, scoring=scoring, cv=cv):
+def catboost(trial, scoring=scoring):
     params = {
         'iterations': trial.suggest_int('iterations', 100, 1000),
         'depth': trial.suggest_int('depth', 1, 10),
@@ -113,7 +114,7 @@ def catboost(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def rf(trial, X, y, scoring=scoring, cv=cv):
+def rf(trial, scoring=scoring):
     max_depth = trial.suggest_int('max_depth', 1, 100)
     n_estimators = trial.suggest_int('n_estimators', 10, 500)
     min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 100)
@@ -134,10 +135,10 @@ def rf(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def gbc(trial, X, y, scoring=scoring, cv=cv):
-    #tol = trial.suggest_loguniform('tol', 1e-8, 10.0)
+def gbc(trial, scoring=scoring):
+    #tol = trial.suggest_float('tol', 1e-8, 10.0, log=True)
     max_depth = trial.suggest_int('max_depth', 1, 50)
-    learning_rate = trial.suggest_loguniform('learning_rate', .001, 1)
+    learning_rate = trial.suggest_float('learning_rate', .001, 1, log=True)
     n_estimators = trial.suggest_int('n_estimators', 10, 500)
     min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 100)
     max_leaf_nodes = trial.suggest_int('max_leaf_nodes', 2, 100)
@@ -159,7 +160,7 @@ def gbc(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def et(trial, X, y, scoring=scoring, cv=cv):
+def et(trial, scoring=scoring):
     max_depth = trial.suggest_int('max_depth', 1, 100)
     n_estimators = trial.suggest_int('n_estimators', 10, 500)
     min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 100)
@@ -183,8 +184,8 @@ def et(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def lr(trial, X, y, scoring=scoring, cv=cv):
-    C = trial.suggest_loguniform('C', 0.001, 1000)
+def lr(trial, scoring=scoring):
+    C = trial.suggest_float('C', 0.001, 1000, log=True)
     solver = trial.suggest_categorical('solver', ['newton-cg', 'liblinear', 'sag', 'saga'])
     
     if solver=='sag' or solver=='newton-cg':
@@ -214,9 +215,9 @@ def lr(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
     
-def ridge(trial, X, y, scoring=scoring, cv=cv):
+def ridge(trial, scoring=scoring):
     alpha = trial.suggest_int('alpha', 0, 1000)
-    tol = trial.suggest_loguniform('tol', 1e-8, 10.0)
+    tol = trial.suggest_float('tol', 1e-8, 10.0, log=True)
         
     model = RidgeClassifier(
         alpha=alpha,
@@ -230,9 +231,9 @@ def ridge(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def lda(trial, X, y, scoring=scoring, cv=cv):
+def lda(trial, scoring=scoring):
     solver = trial.suggest_categorical('solver', ['lsqr', 'eigen'])
-    tol = trial.suggest_loguniform('tol', 1e-8, 10.0)
+    tol = trial.suggest_float('tol', 1e-8, 10.0, log=True)
           
     model = LinearDiscriminantAnalysis(
         solver=solver,
@@ -245,8 +246,8 @@ def lda(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def nb(trial, X, y, scoring=scoring, cv=cv):
-    var_smoothing  = trial.suggest_loguniform('var_smoothing', 1e-10, 1e-3)
+def nb(trial, scoring=scoring):
+    var_smoothing  = trial.suggest_float('var_smoothing', 1e-10, 1e-3, log=True)
           
     model = GaussianNB(
         var_smoothing=var_smoothing
@@ -258,8 +259,8 @@ def nb(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def ada(trial, X, y, scoring=scoring, cv=cv):
-    learning_rate = trial.suggest_loguniform('learning_rate', .001, 1)
+def ada(trial, scoring=scoring):
+    learning_rate = trial.suggest_float('learning_rate', .001, 1, log=True)
     n_estimators = trial.suggest_int('n_estimators', 10, 500)
           
     model = AdaBoostClassifier(
@@ -273,7 +274,7 @@ def ada(trial, X, y, scoring=scoring, cv=cv):
     
     return np.mean(cv_scores)
 
-def knn(trial, X, y, scoring=scoring, cv=cv):
+def knn(trial, scoring=scoring):
     n_neighbors = trial.suggest_int('n_neighbors', 2, 100)
           
     model = KNeighborsClassifier(
